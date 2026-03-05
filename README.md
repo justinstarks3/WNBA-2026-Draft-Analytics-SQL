@@ -3,7 +3,7 @@
 ## Overview
 This project analyzes WNBA draft prospects using a combination of raw player statistics and derived performance metrics to create a structured prospect board with archetypes, draft scores, and draft grades.
 
-The purpose of this project is not to predict the draft with certainty, but to demonstrate strong SQL fundamentals, feature engineering, and analytical thinking in a sports analytics context. This repository is intended as a portfolio project showcasing data modeling and querying skills.
+The purpose of this project is not to predict the draft with certainty, but to demonstrate strong SQL fundamentals, feature engineering, and analytical thinking in a sports analytics context. This repository is intended as a portfolio project showcasing data modeling and querying skills. This is not meant to be used or sold sport agencies or WNBA teams. 
 
 ---
 
