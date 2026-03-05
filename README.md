@@ -47,7 +47,7 @@ Player profiles are generated using JOINs between raw data and derived tables. T
 
 - One clean output per query
 - Clear relational modeling
-- Recruiter-friendly SQL that demonstrates real-world querying patterns
+- WNBA Recruiter-friendly insights 
 
 Example:
 ```sql
