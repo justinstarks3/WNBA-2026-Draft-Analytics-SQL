@@ -49,19 +49,7 @@ Player profiles are generated using JOINs between raw data and derived tables. T
 - Clear relational modeling
 - WNBA Recruiter-friendly insights 
 
-Example:
-```sql
-SELECT
-    pb.Name,
-    pb.POS,
-    pb.draft_score,
-    pb.draft_grade,
-    pb.archetype,
-    p.team_abbr,
-    p.GP,
-    p.MIN,
-    p.PTS
-FROM prospect_board_archetypes pb
-LEFT JOIN prospects p
-    ON pb.Name = p.player_name
-WHERE pb.Name = 'Berry Wallace';
+## 🏀 WNBA 2026 Draft Board
+Interactive scouting dashboard built from ESPN NCAAW stats.
+
+🔗 [View Live Dashboard](https://justinstarks3.github.io/your-repo-name/)
