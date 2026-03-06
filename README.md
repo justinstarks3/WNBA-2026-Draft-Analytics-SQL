@@ -52,4 +52,4 @@ Player profiles are generated using JOINs between raw data and derived tables. T
 ## 🏀 WNBA 2026 Draft Board
 Interactive scouting dashboard built from ESPN NCAAW stats.
 
-🔗 [View Live Dashboard](https://justinstarks3.github.io/your-repo-name/)
+🔗 [View Live Dashboard](https://justinstarks3.github.io/WNBA-2026-Draft-Analytics-SQL/)
