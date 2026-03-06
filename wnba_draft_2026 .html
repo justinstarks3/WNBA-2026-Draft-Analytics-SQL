@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WNBA 2026 Draft Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --surface2: #1a1e28;
+    --border: #252a38;
+    --accent: #f0b429;
+    --accent2: #ff6b6b;
+    --accent3: #4ecdc4;
+    --text: #e8eaf0;
+    --text-muted: #6b7280;
+    --tier1: #f0b429;
+    --tier2: #a78bfa;
+    --tier3: #34d399;
+    --tier4: #60a5fa;
+    --tier5: #9ca3af;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    position: relative;
+    padding: 3rem 2rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #0d1018 0%, var(--bg) 100%);
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: -60px; right: -60px;
+    height: 200px;
+    background: radial-gradient(ellipse 60% 100% at 50% 0%, rgba(240,180,41,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.8rem;
+  }
+  .header-logo {
+    height: 80px;
+    width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 20px rgba(255,255,255,0.15));
+  }
+  .title-block h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    letter-spacing: 0.04em;
+    line-height: 0.95;
+    color: var(--accent);
+    text-shadow: 0 0 60px rgba(240,180,41,0.3);
+  }
+  .title-block h1 span { color: var(--text); }
+  .title-block p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 0.6rem;
+    max-width: 520px;
+    line-height: 1.6;
+  }
+  .header-stats {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .hstat {
+    text-align: center;
+    padding: 0.7rem 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .hstat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .hstat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+  /* NAV TABS */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0;
+    padding: 0 2rem;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 1rem 1.5rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* MAIN LAYOUT */
+  .main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ===== BIG BOARD PANEL ===== */
+  .controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+  }
+  .control-group { display: flex; flex-direction: column; gap: 0.3rem; }
+  .control-group label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+  .control-group input, .control-group select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    min-width: 160px;
+  }
+  .control-group input:focus, .control-group select:focus { outline: 1px solid var(--accent); }
+
+  .board-table-wrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  thead tr { background: var(--surface2); }
+  th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    border-bottom: 1px solid var(--border);
+  }
+  th:hover { color: var(--accent); }
+  th .sort-arrow { margin-left: 4px; opacity: 0.5; }
+  th.sorted { color: var(--accent); }
+  th.sorted .sort-arrow { opacity: 1; }
+  tbody tr {
+    border-bottom: 1px solid rgba(37,42,56,0.6);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.selected { background: rgba(240,180,41,0.06); border-left: 2px solid var(--accent); }
+  td { padding: 0.7rem 1rem; white-space: nowrap; }
+
+  .grade-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+  }
+  .grade-Aplus { background: rgba(240,180,41,0.2); color: var(--accent); }
+  .grade-A { background: rgba(240,180,41,0.15); color: #d4a017; }
+  .grade-Aminus { background: rgba(52,211,153,0.15); color: var(--tier3); }
+  .grade-Bplus { background: rgba(96,165,250,0.15); color: var(--tier4); }
+  .grade-B { background: rgba(96,165,250,0.1); color: #82adf0; }
+  .grade-other { background: rgba(107,114,128,0.15); color: var(--text-muted); }
+
+  .tier-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+  }
+  .tier1 { background: var(--tier1); }
+  .tier2 { background: var(--tier2); }
+  .tier3 { background: var(--tier3); }
+  .tier4 { background: var(--tier4); }
+  .tier5 { background: var(--tier5); }
+
+  .archetype-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .bar-cell { display: flex; align-items: center; gap: 8px; }
+  .mini-bar { height: 4px; border-radius: 2px; background: var(--border); flex: 1; min-width: 50px; position: relative; overflow: hidden; }
+  .mini-bar-fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width 0.3s; }
+
+  .pos-badge {
+    display: inline-block;
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 22px;
+    font-family: 'DM Mono', monospace;
+  }
+  .pos-G { background: rgba(96,165,250,0.15); color: var(--tier4); }
+  .pos-F { background: rgba(52,211,153,0.15); color: var(--tier3); }
+  .pos-C { background: rgba(167,139,250,0.15); color: var(--tier2); }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .pagination-btns { display: flex; gap: 0.4rem; }
+  .pg-btn {
+    padding: 0.3rem 0.7rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    transition: all 0.15s;
+  }
+  .pg-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .pg-btn.active-pg { background: var(--accent); color: #000; border-color: var(--accent); }
+  .pg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ===== PLAYER DETAIL MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 760px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 2rem;
+    position: relative;
+    animation: modalIn 0.2s ease;
+  }
+  @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-player-header { margin-bottom: 1.5rem; }
+  .modal-player-name { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; color: var(--accent); line-height: 1; }
+  .modal-player-meta { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.3rem; }
+  .modal-player-meta span { margin-right: 1rem; }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.8rem;
+    margin: 1.2rem 0;
+  }
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem;
+    text-align: center;
+  }
+  .stat-card-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    color: var(--text);
+    line-height: 1;
+  }
+  .stat-card-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+  .z-radar-wrap { margin: 1.5rem 0; }
+  .z-radar-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.8rem; }
+  .z-row { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem; font-size: 0.78rem; }
+  .z-label { width: 120px; color: var(--text-muted); flex-shrink: 0; }
+  .z-bar-outer { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: visible; position: relative; }
+  .z-bar-inner { height: 100%; border-radius: 4px; position: absolute; transition: width 0.4s; }
+  .z-val { width: 40px; text-align: right; font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--text-muted); }
+
+  /* ===== COMPARE PANEL ===== */
+  .compare-search { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .compare-slot {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+  }
+  .compare-slot h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.7rem; }
+  .compare-slot select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+  }
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .compare-stat-row {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(37,42,56,0.5);
+    font-size: 0.82rem;
+  }
+  .compare-stat-row:last-child { border-bottom: none; }
+  .csr-label { width: 140px; color: var(--text-muted); flex-shrink: 0; }
+  .csr-val1 { flex: 1; text-align: center; font-family: 'DM Mono', monospace; }
+  .csr-val2 { flex: 1; text-align: center; font-family: 'DM Mono', monospace; }
+  .csr-winner { color: var(--accent); font-weight: 600; }
+  .compare-chart-wrap { margin-top: 1.5rem; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+  /* ===== INSIGHTS PANEL ===== */
+  .insights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem; }
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+  .insight-card h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    margin-bottom: 0.8rem;
+  }
+  .insight-table { width: 100%; font-size: 0.78rem; }
+  .insight-table td { padding: 0.35rem 0; border-bottom: 1px solid rgba(37,42,56,0.5); }
+  .insight-table td:first-child { color: var(--text-muted); }
+  .insight-table td:last-child { text-align: right; font-family: 'DM Mono', monospace; }
+  .insight-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.8rem; line-height: 1.5; }
+
+  .archetype-dist { display: flex; flex-direction: column; gap: 0.5rem; }
+  .arch-row { display: flex; align-items: center; gap: 0.7rem; font-size: 0.78rem; }
+  .arch-name { width: 150px; flex-shrink: 0; color: var(--text-muted); }
+  .arch-bar { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .arch-bar-fill { height: 100%; border-radius: 3px; background: var(--accent3); }
+  .arch-count { width: 30px; text-align: right; font-family: 'DM Mono', monospace; color: var(--text-muted); }
+
+  /* ===== TEAM NEEDS PANEL ===== */
+  .team-needs-layout { display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; }
+  @media (max-width: 768px) { .team-needs-layout { grid-template-columns: 1fr; } }
+  .team-list-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    height: fit-content;
+  }
+  .team-list-panel h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.8rem; }
+  .archetype-picker { display: flex; flex-direction: column; gap: 0.5rem; }
+  .arch-pick-btn {
+    padding: 0.6rem 0.8rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .arch-pick-btn:hover, .arch-pick-btn.active { background: rgba(240,180,41,0.1); border-color: var(--accent); color: var(--accent); }
+  .needs-results { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; }
+  .needs-results h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 1rem; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+  .loading { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 0.9rem; }
+  .dot-loader::after { content: ''; animation: dots 1.2s steps(4) infinite; }
+  @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+
+  .section-header { margin-bottom: 1.2rem; }
+  .section-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.04em; color: var(--text); }
+  .section-header p { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+  .result-count { font-size: 0.75rem; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+  
+  .empty-state { padding: 3rem; text-align: center; color: var(--text-muted); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+      <div class="header-left">
+      <img src="data:image/png;base64,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1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdnuPqX1uH3jOOz3H1L63D7xe0boLqUX7LaRutDaA1ecdn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" alt="WNBA Logo" class="header-logo">
+    <div class="title-block">
+      <h1>WNBA <span>2026</span><br>Draft Board</h1>
+      <p>Interactive scouting dashboard built from ESPN NCAAW stats. Composite draft scores derived from per-40 metrics, efficiency, defense, and playmaking — normalized against the full draft class.</p>
+      <p style="margin-top:0.5rem; font-size:0.78rem; color:var(--accent); opacity:0.85;">⚠ Data snapshot taken at approximately mid-season — stats and rankings will shift as the year progresses.</p>
+    </div>
+      </div>
+    <div class="header-stats">
+      <div class="hstat"><div class="hstat-val" id="stat-total">3,224</div><div class="hstat-label">Prospects</div></div>
+      <div class="hstat"><div class="hstat-val" id="stat-tier1">~160</div><div class="hstat-label">Tier 1</div></div>
+      <div class="hstat"><div class="hstat-val">8</div><div class="hstat-label">Metrics</div></div>
+      <div class="hstat"><div class="hstat-val">14</div><div class="hstat-label">Archetypes</div></div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <button class="tab active" onclick="switchTab('board', this)">Big Board</button>
+    <button class="tab" onclick="switchTab('compare', this)">Compare Players</button>
+    <button class="tab" onclick="switchTab('insights', this)">Insights</button>
+    <button class="tab" onclick="switchTab('needs', this)">Find by Archetype</button>
+    <button class="tab" onclick="switchTab('methodology', this)">Methodology</button>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- BIG BOARD -->
+  <div class="panel active" id="panel-board">
+    <div class="controls">
+      <div class="control-group">
+        <label>Search Player</label>
+        <input type="text" id="search-input" placeholder="Name or team..." oninput="applyFilters()">
+      </div>
+      <div class="control-group">
+        <label>Position</label>
+        <select id="pos-filter" onchange="applyFilters()">
+          <option value="">All Positions</option>
+          <option value="G">Guard (G)</option>
+          <option value="F">Forward (F)</option>
+          <option value="C">Center (C)</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Draft Tier</label>
+        <select id="tier-filter" onchange="applyFilters()">
+          <option value="">All Tiers</option>
+          <option value="Tier 1">Tier 1 — Franchise</option>
+          <option value="Tier 2">Tier 2 — Lottery</option>
+          <option value="Tier 3">Tier 3 — First Round</option>
+          <option value="Tier 4">Tier 4 — Second Round</option>
+          <option value="Tier 5">Tier 5 — Camp/Dev</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Archetype</label>
+        <select id="arch-filter" onchange="applyFilters()">
+          <option value="">All Archetypes</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Min Draft Score</label>
+        <input type="number" id="score-filter" placeholder="e.g. 0.5" step="0.1" min="-5" max="5" oninput="applyFilters()" style="min-width:120px">
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.8rem;">
+      <div class="result-count" id="result-count"></div>
+      <div style="font-size:0.75rem; color:var(--text-muted);">Click any row for full player profile</div>
+    </div>
+    <div class="board-table-wrap">
+      <table id="board-table">
+        <thead>
+          <tr>
+            <th onclick="sortBy('RK')" id="th-RK">Rank<span class="sort-arrow">↕</span></th>
+            <th onclick="sortBy('Name')" id="th-Name">Player<span class="sort-arrow">↕</span></th>
+            <th>Pos</th>
+            <th>Team</th>
+            <th onclick="sortBy('draft_score')" id="th-draft_score" class="sorted">Score<span class="sort-arrow">↓</span></th>
+            <th>Grade</th>
+            <th>Tier</th>
+            <th>Archetype</th>
+            <th onclick="sortBy('PTS')" id="th-PTS">PTS<span class="sort-arrow">↕</span></th>
+            <th onclick="sortBy('ts')" id="th-ts">TS%<span class="sort-arrow">↕</span></th>
+            <th onclick="sortBy('pts_per40')" id="th-pts_per40">Pts/40<span class="sort-arrow">↕</span></th>
+            <th onclick="sortBy('stocks_per40')" id="th-stocks_per40">Stks/40<span class="sort-arrow">↕</span></th>
+            <th onclick="sortBy('ast_per40')" id="th-ast_per40">Ast/40<span class="sort-arrow">↕</span></th>
+            <th onclick="sortBy('GP')" id="th-GP">GP<span class="sort-arrow">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="board-tbody">
+          <tr><td colspan="14" class="loading">Loading prospect data<span class="dot-loader"></span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <div id="page-info" style="font-size:0.78rem; color:var(--text-muted);"></div>
+      <div class="pagination-btns" id="pagination-btns"></div>
+    </div>
+  </div>
+
+  <!-- COMPARE -->
+  <div class="panel" id="panel-compare">
+    <div class="section-header">
+      <h2>Player Comparison</h2>
+      <p>Select two prospects to compare their statistical profiles and z-scores side by side.</p>
+    </div>
+    <div class="compare-search">
+      <div class="compare-slot">
+        <h3>Player 1</h3>
+        <select id="compare-p1" onchange="updateCompare()" style="width:100%"><option value="">Select a player...</option></select>
+      </div>
+      <div class="compare-slot">
+        <h3>Player 2</h3>
+        <select id="compare-p2" onchange="updateCompare()" style="width:100%"><option value="">Select a player...</option></select>
+      </div>
+    </div>
+    <div id="compare-output" class="empty-state">Select two players above to compare their profiles.</div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="panel" id="panel-insights">
+    <div class="section-header">
+      <h2>Draft Class Insights</h2>
+      <p>Key findings and distributions from the 2026 NCAAW draft class analysis.</p>
+    </div>
+    <div class="insights-grid" id="insights-grid">
+      <div class="loading">Building insights<span class="dot-loader"></span></div>
+    </div>
+  </div>
+
+  <!-- FIND BY ARCHETYPE -->
+  <div class="panel" id="panel-needs">
+    <div class="section-header">
+      <h2>Find by Archetype</h2>
+      <p>Select a player archetype to surface the top prospects that fit that role.</p>
+    </div>
+    <div class="team-needs-layout">
+      <div class="team-list-panel">
+        <h3>Select Archetype</h3>
+        <div class="archetype-picker" id="arch-picker"></div>
+      </div>
+      <div class="needs-results">
+        <h3 id="needs-result-title">Choose an archetype to see matches</h3>
+        <div id="needs-result-body" class="empty-state">Pick a role from the left panel.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- METHODOLOGY -->
+  <div class="panel" id="panel-methodology">
+    <div class="section-header">
+      <h2>Methodology</h2>
+      <p>How the draft scores and grades were computed.</p>
+    </div>
+    <div style="max-width:780px; display:flex; flex-direction:column; gap:1.5rem;">
+      <div class="insight-card">
+        <h3>Data Source</h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.7;">Statistics were scraped from ESPN's Women's College Basketball stats pages for the 2025–26 season (season=2026 parameter). Data covers 3,224 players across all NCAA Division I programs. This analysis is for educational and portfolio purposes only.</p>
+      </div>
+      <div class="insight-card">
+        <h3>Per-40 Normalization</h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.7;">All volume stats (PTS, REB, AST, STL, BLK, TOV) are converted to per-40-minute rates to account for differences in playing time. A player averaging 12 points in 20 minutes is treated equivalently to a starter averaging 24 in 40 minutes.</p>
+      </div>
+      <div class="insight-card">
+        <h3>Efficiency Metrics</h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.7;"><strong style="color:var(--text)">eFG%</strong> = (FGM + 0.5×3PM) / FGA — weights 3-pointers appropriately.<br><br><strong style="color:var(--text)">TS%</strong> = PTS / (2 × (FGA + 0.44×FTA)) — true shooting accounts for free throws, the most complete efficiency metric.</p>
+      </div>
+      <div class="insight-card">
+        <h3>Z-Score Standardization</h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.7;">Each metric is converted to a z-score (how many standard deviations above/below the class mean) so that completely different stats — points, steals, efficiency — can be combined fairly. Turnovers are sign-flipped (lower is better).</p>
+      </div>
+      <div class="insight-card">
+        <h3>Composite Draft Score Weights</h3>
+        <table class="insight-table" style="margin-top:0.5rem;">
+          <tr><td>Scoring (pts_per40)</td><td>22%</td></tr>
+          <tr><td>Efficiency (TS%)</td><td>20%</td></tr>
+          <tr><td>Defense (stocks_per40)</td><td>18%</td></tr>
+          <tr><td>Playmaking (ast_per40)</td><td>15%</td></tr>
+          <tr><td>Ball Security (−tov_per40)</td><td>10%</td></tr>
+          <tr><td>Rebounding (reb_per40)</td><td>10%</td></tr>
+          <tr><td>Spacing (3PA/FGA)</td><td>8%</td></tr>
+          <tr><td>Rim Pressure (FTA/FGA)</td><td>7%</td></tr>
+        </table>
+      </div>
+      <div class="insight-card">
+        <h3>Draft Grades & Tiers</h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.7;">Grades are assigned by percentile rank within the draft class. Tier 1 (Franchise) = top 10%, Tier 2 (Lottery) = 75–90th percentile, Tier 3 (First Round) = 50–75th, Tier 4 (Second Round) = 25–50th, Tier 5 (Camp/Dev) = bottom 25%.</p>
+      </div>
+      <div class="insight-card">
+        <h3>Limitations</h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.7;">This model does not account for: player age (WNBA eligibility requires turning 22 in draft year), competition level (Power 5 vs. mid-major), injury history, team role/usage, or any qualitative scouting factors. It is a quantitative baseline, not a complete draft guide.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- PLAYER MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="player-modal">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// DATA — extracted from notebook outputs
+// =============================================
+const PLAYERS = [
+  {RK:30,Name:"Sarah Strong",Team:"CONN",POS:"F",GP:21,MIN:37.1,PTS:26.1,FGM:9.7,FGA:18.1,"FG%":53.7,"3PM":0.9,"3PA":2.4,"3P%":37.5,FTM:5.8,FTA:7.0,"FT%":82.9,REB:9.2,AST:6.2,STL:2.1,BLK:0.7,TOV:2.7,draft_score:2.577,draft_percentile:100,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:28.1,reb_per40:9.9,ast_per40:6.7,stl_per40:2.3,blk_per40:0.75,tov_per40:2.9,efg:0.566,ts:0.689,three_rate:0.133,ft_rate:0.387,ast_to:2.3,stocks_per40:7.5,z_scoring:3.85,z_efficiency:2.21,z_defense:4.01,z_playmaking:3.22,z_rebounding:2.85,z_spacing:-0.15,z_rim_pressure:0.95,z_ball_security:0.55},
+  {RK:243,Name:"MiLaysia Fulwiley",Team:"LSU",POS:"G",GP:21,MIN:31.5,PTS:21.1,FGM:7.5,FGA:16.8,"FG%":44.7,"3PM":1.8,"3PA":5.5,"3P%":32.7,FTM:4.3,FTA:5.5,"FT%":78.2,REB:4.3,AST:5.4,STL:2.7,BLK:0.2,TOV:3.3,draft_score:2.230,draft_percentile:100,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:26.9,reb_per40:5.5,ast_per40:6.9,stl_per40:3.4,blk_per40:0.25,tov_per40:4.2,efg:0.501,ts:0.583,three_rate:0.327,ft_rate:0.327,ast_to:1.64,stocks_per40:8.4,z_scoring:3.21,z_efficiency:1.07,z_defense:4.85,z_playmaking:3.41,z_rebounding:0.82,z_spacing:0.68,z_rim_pressure:0.31,z_ball_security:-0.71},
+  {RK:2,Name:"Hannah Hidalgo",Team:"ND",POS:"G",GP:21,MIN:35.6,PTS:24.8,FGM:9.2,FGA:19.5,"FG%":47.4,"3PM":1.1,"3PA":4.8,"3P%":22.8,FTM:5.2,FTA:6.4,"FT%":81.3,REB:5.8,AST:5.5,STL:5.7,BLK:0.3,TOV:3.2,draft_score:1.905,draft_percentile:99.9,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:27.9,reb_per40:6.5,ast_per40:6.2,stl_per40:6.4,blk_per40:0.34,tov_per40:3.6,efg:0.500,ts:0.556,three_rate:0.246,ft_rate:0.328,ast_to:1.72,stocks_per40:6.7,z_scoring:3.23,z_efficiency:0.78,z_defense:4.01,z_playmaking:3.01,z_rebounding:1.25,z_spacing:0.12,z_rim_pressure:0.33,z_ball_security:-0.39},
+  {RK:36,Name:"Avery Koenen",Team:"NDSU",POS:"F",GP:27,MIN:34.6,PTS:23.1,FGM:8.2,FGA:15.8,"FG%":51.9,"3PM":1.5,"3PA":4.2,"3P%":35.7,FTM:4.0,FTA:4.5,"FT%":88.9,REB:6.2,AST:2.7,STL:1.4,BLK:0.5,TOV:1.8,draft_score:1.856,draft_percentile:99.9,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:26.7,reb_per40:7.2,ast_per40:3.1,stl_per40:1.6,blk_per40:0.58,tov_per40:2.1,efg:0.566,ts:0.684,three_rate:0.266,ft_rate:0.285,ast_to:1.5,stocks_per40:3.8,z_scoring:3.11,z_efficiency:2.22,z_defense:0.71,z_playmaking:0.68,z_rebounding:1.51,z_spacing:0.38,z_rim_pressure:0.04,z_ball_security:0.90},
+  {RK:13,Name:"Brooklyn Meyer",Team:"SDST",POS:"F",GP:23,MIN:34.3,PTS:25.4,FGM:9.0,FGA:16.9,"FG%":53.3,"3PM":1.1,"3PA":3.1,"3P%":35.5,FTM:5.2,FTA:5.8,"FT%":89.7,REB:7.5,AST:3.4,STL:1.4,BLK:0.6,TOV:2.4,draft_score:1.706,draft_percentile:99.9,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:29.6,reb_per40:8.7,ast_per40:4.0,stl_per40:1.6,blk_per40:0.70,tov_per40:2.8,efg:0.566,ts:0.669,three_rate:0.183,ft_rate:0.343,ast_to:1.42,stocks_per40:3.9,z_scoring:3.70,z_efficiency:1.78,z_defense:0.75,z_playmaking:1.31,z_rebounding:2.12,z_spacing:-0.38,z_rim_pressure:0.51,z_ball_security:0.52},
+  {RK:1,Name:"Audi Crooks",Team:"ISU",POS:"C",GP:22,MIN:28.7,PTS:25.9,FGM:10.6,FGA:15.8,"FG%":67.1,"3PM":0.0,"3PA":0.3,"3P%":14.3,FTM:4.6,FTA:6.5,"FT%":70.8,REB:7.7,AST:1.6,STL:0.4,BLK:0.9,TOV:2.4,draft_score:1.593,draft_percentile:99.8,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Interior Force",pts_per40:37.2,reb_per40:10.7,ast_per40:2.2,stl_per40:0.56,blk_per40:1.26,tov_per40:3.3,efg:0.671,ts:0.697,three_rate:0.019,ft_rate:0.411,ast_to:0.67,stocks_per40:1.8,z_scoring:5.22,z_efficiency:2.47,z_defense:-0.51,z_playmaking:-0.19,z_rebounding:3.11,z_spacing:-1.42,z_rim_pressure:1.31,z_ball_security:-0.06},
+  {RK:57,Name:"Taylee Chirrick",Team:"MTST",POS:"G",GP:29,MIN:35.1,PTS:21.2,FGM:7.7,FGA:16.0,"FG%":48.1,"3PM":1.5,"3PA":4.2,"3P%":35.7,FTM:4.3,FTA:5.3,"FT%":81.1,REB:4.8,AST:4.3,STL:2.3,BLK:0.3,TOV:3.2,draft_score:1.593,draft_percentile:99.8,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:24.2,reb_per40:5.5,ast_per40:4.9,stl_per40:2.6,blk_per40:0.34,tov_per40:3.6,efg:0.528,ts:0.566,three_rate:0.263,ft_rate:0.331,ast_to:1.34,stocks_per40:5.7,z_scoring:2.35,z_efficiency:0.86,z_defense:2.55,z_playmaking:2.15,z_rebounding:0.86,z_spacing:0.32,z_rim_pressure:0.34,z_ball_security:-0.41},
+  {RK:55,Name:"Timaya Lewis-Eutsey",Team:"MRSH",POS:"G",GP:23,MIN:34.7,PTS:22.4,FGM:8.1,FGA:16.6,"FG%":48.8,"3PM":1.3,"3PA":3.9,"3P%":33.3,FTM:4.9,FTA:6.0,"FT%":81.7,REB:5.5,AST:4.9,STL:2.4,BLK:0.3,TOV:4.0,draft_score:1.543,draft_percentile:99.8,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:25.8,reb_per40:6.3,ast_per40:5.6,stl_per40:2.8,blk_per40:0.35,tov_per40:4.6,efg:0.527,ts:0.560,three_rate:0.235,ft_rate:0.361,ast_to:1.23,stocks_per40:5.9,z_scoring:2.89,z_efficiency:0.77,z_defense:2.78,z_playmaking:2.59,z_rebounding:1.15,z_spacing:0.03,z_rim_pressure:0.58,z_ball_security:-1.10},
+  {RK:3,Name:"Mikayla Blakes",Team:"VAN",POS:"G",GP:22,MIN:33.3,PTS:24.9,FGM:8.6,FGA:19.1,"FG%":44.9,"3PM":2.3,"3PA":7.4,"3P%":31.4,FTM:5.4,FTA:6.5,"FT%":83.2,REB:3.9,AST:4.5,STL:3.0,BLK:0.2,TOV:2.8,draft_score:1.535,draft_percentile:99.8,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:29.9,reb_per40:4.7,ast_per40:5.4,stl_per40:3.6,blk_per40:0.24,tov_per40:3.4,efg:0.511,ts:0.570,three_rate:0.387,ft_rate:0.340,ast_to:1.61,stocks_per40:4.0,z_scoring:3.67,z_efficiency:0.95,z_defense:1.49,z_playmaking:2.44,z_rebounding:0.27,z_spacing:0.80,z_rim_pressure:0.45,z_ball_security:-0.01},
+  {RK:91,Name:"Raegan Beers",Team:"OU",POS:"C",GP:22,MIN:30.4,PTS:20.0,FGM:8.1,FGA:14.9,"FG%":54.4,"3PM":0.2,"3PA":0.7,"3P%":28.6,FTM:3.6,FTA:4.5,"FT%":80.0,REB:9.1,AST:3.2,STL:1.1,BLK:0.5,TOV:2.8,draft_score:1.479,draft_percentile:99.7,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Interior Force",pts_per40:26.3,reb_per40:12.0,ast_per40:4.2,stl_per40:1.4,blk_per40:0.66,tov_per40:3.7,efg:0.551,ts:0.623,three_rate:0.047,ft_rate:0.302,ast_to:1.14,stocks_per40:2.1,z_scoring:2.95,z_efficiency:1.32,z_defense:0.03,z_playmaking:1.32,z_rebounding:3.55,z_spacing:-1.22,z_rim_pressure:0.16,z_ball_security:-0.48},
+  {RK:88,Name:"Lauren Betts",Team:"UCLA",POS:"C",GP:22,MIN:29.7,PTS:17.8,FGM:7.3,FGA:12.7,"FG%":57.5,"3PM":0.0,"3PA":0.3,"3P%":0.0,FTM:3.2,FTA:4.8,"FT%":66.7,REB:8.7,AST:3.6,STL:1.5,BLK:2.3,TOV:3.3,draft_score:1.389,draft_percentile:99.5,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Rim Protector",pts_per40:24.0,reb_per40:11.7,ast_per40:4.8,stl_per40:2.0,blk_per40:3.10,tov_per40:4.4,efg:0.575,ts:0.582,three_rate:0.024,ft_rate:0.378,ast_to:1.09,stocks_per40:5.1,z_scoring:2.43,z_efficiency:1.03,z_defense:2.09,z_playmaking:1.95,z_rebounding:3.28,z_spacing:-1.38,z_rim_pressure:0.92,z_ball_security:-0.81},
+  {RK:28,Name:"Olivia Miles",Team:"TCU",POS:"G",GP:22,MIN:34.0,PTS:18.4,FGM:6.7,FGA:15.4,"FG%":43.5,"3PM":0.9,"3PA":3.3,"3P%":27.3,FTM:4.1,FTA:5.2,"FT%":78.8,REB:5.9,AST:7.0,STL:0.9,BLK:0.2,TOV:3.7,draft_score:1.292,draft_percentile:99.1,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:21.6,reb_per40:6.9,ast_per40:8.2,stl_per40:1.1,blk_per40:0.24,tov_per40:4.4,efg:0.462,ts:0.512,three_rate:0.214,ft_rate:0.338,ast_to:1.89,stocks_per40:1.3,z_scoring:1.95,z_efficiency:-0.11,z_defense:-0.01,z_playmaking:4.25,z_rebounding:1.44,z_spacing:-0.14,z_rim_pressure:0.42,z_ball_security:-0.96},
+  {RK:23,Name:"Gracie Merkle",Team:"PSU",POS:"C",GP:26,MIN:35.3,PTS:26.5,FGM:9.7,FGA:15.5,"FG%":62.6,"3PM":0.5,"3PA":1.2,"3P%":41.7,FTM:6.6,FTA:8.2,"FT%":80.5,REB:7.6,AST:1.8,STL:0.7,BLK:0.6,TOV:3.6,draft_score:1.331,draft_percentile:99.3,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Interior Force",pts_per40:30.0,reb_per40:8.6,ast_per40:2.0,stl_per40:0.79,blk_per40:0.68,tov_per40:4.1,efg:0.642,ts:0.735,three_rate:0.077,ft_rate:0.529,ast_to:0.50,stocks_per40:1.5,z_scoring:3.91,z_efficiency:3.36,z_defense:-0.23,z_playmaking:-0.05,z_rebounding:2.11,z_spacing:-1.07,z_rim_pressure:2.15,z_ball_security:-0.72},
+  {RK:186,Name:"Talaysia Cooper",Team:"TENN",POS:"G",GP:21,MIN:28.0,PTS:16.3,FGM:5.8,FGA:12.3,"FG%":47.2,"3PM":0.5,"3PA":2.0,"3P%":25.0,FTM:4.2,FTA:5.4,"FT%":77.8,REB:3.5,AST:5.1,STL:2.4,BLK:0.0,TOV:3.5,draft_score:1.352,draft_percentile:99.4,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:23.3,reb_per40:5.0,ast_per40:7.3,stl_per40:3.4,blk_per40:0.0,tov_per40:5.0,efg:0.489,ts:0.488,three_rate:0.163,ft_rate:0.439,ast_to:1.46,stocks_per40:3.4,z_scoring:2.20,z_efficiency:-0.33,z_defense:1.35,z_playmaking:3.80,z_rebounding:0.53,z_spacing:-0.48,z_rim_pressure:1.21,z_ball_security:-1.47},
+  {RK:10,Name:"Jaloni Cambridge",Team:"OSU",POS:"G",GP:26,MIN:34.8,PTS:24.9,FGM:8.9,FGA:18.4,"FG%":48.4,"3PM":0.7,"3PA":2.4,"3P%":29.2,FTM:6.3,FTA:7.6,"FT%":82.9,REB:3.5,AST:5.0,STL:1.3,BLK:0.0,TOV:3.4,draft_score:1.350,draft_percentile:99.4,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:28.6,reb_per40:4.0,ast_per40:5.8,stl_per40:1.5,blk_per40:0.0,tov_per40:3.9,efg:0.503,ts:0.562,three_rate:0.130,ft_rate:0.413,ast_to:1.47,stocks_per40:1.5,z_scoring:3.37,z_efficiency:0.80,z_defense:-0.04,z_playmaking:2.65,z_rebounding:-0.04,z_spacing:-0.60,z_rim_pressure:1.17,z_ball_security:-0.57},
+  {RK:53,Name:"S'Mya Nichols",Team:"KU",POS:"G",GP:22,MIN:35.0,PTS:22.6,FGM:8.0,FGA:15.3,"FG%":52.3,"3PM":1.8,"3PA":4.4,"3P%":40.9,FTM:4.8,FTA:5.7,"FT%":84.2,REB:3.5,AST:6.2,STL:0.5,BLK:0.1,TOV:3.8,draft_score:1.289,draft_percentile:99.1,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:25.8,reb_per40:4.0,ast_per40:7.1,stl_per40:0.57,blk_per40:0.11,tov_per40:4.3,efg:0.571,ts:0.638,three_rate:0.288,ft_rate:0.373,ast_to:1.63,stocks_per40:0.69,z_scoring:2.81,z_efficiency:1.59,z_defense:-0.89,z_playmaking:3.64,z_rebounding:-0.04,z_spacing:0.52,z_rim_pressure:0.73,z_ball_security:-0.88},
+  {RK:262,Name:"Madina Okot",Team:"SC",POS:"C",GP:23,MIN:29.5,PTS:17.3,FGM:6.7,FGA:11.0,"FG%":60.9,"3PM":0.0,"3PA":0.1,"3P%":0.0,FTM:3.9,FTA:5.6,"FT%":69.6,REB:8.3,AST:1.4,STL:1.4,BLK:2.4,TOV:3.3,draft_score:1.354,draft_percentile:99.4,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Rim Protector",pts_per40:23.5,reb_per40:11.3,ast_per40:1.9,stl_per40:1.9,blk_per40:3.26,tov_per40:4.5,efg:0.609,ts:0.623,three_rate:0.009,ft_rate:0.509,ast_to:0.42,stocks_per40:5.1,z_scoring:2.18,z_efficiency:1.25,z_defense:1.91,z_playmaking:-0.21,z_rebounding:3.12,z_spacing:-1.55,z_rim_pressure:1.88,z_ball_security:-0.91},
+  {RK:6,Name:"Maggie Doogan",Team:"RICH",POS:"F",GP:28,MIN:35.1,PTS:22.7,FGM:8.1,FGA:14.9,"FG%":54.4,"3PM":1.5,"3PA":4.1,"3P%":36.6,FTM:4.9,FTA:6.0,"FT%":81.7,REB:5.5,AST:4.5,STL:0.9,BLK:0.3,TOV:4.0,draft_score:1.320,draft_percentile:99.3,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Scoring Specialist",pts_per40:25.8,reb_per40:6.3,ast_per40:5.1,stl_per40:1.0,blk_per40:0.34,tov_per40:4.6,efg:0.584,ts:0.651,three_rate:0.275,ft_rate:0.403,ast_to:1.13,stocks_per40:1.4,z_scoring:2.80,z_efficiency:1.82,z_defense:-0.20,z_playmaking:2.25,z_rebounding:1.14,z_spacing:0.45,z_rim_pressure:0.94,z_ball_security:-1.10},
+  {RK:304,Name:"Kennedy Blair",Team:"MSU",POS:"G",GP:26,MIN:33.5,PTS:15.9,FGM:5.5,FGA:12.7,"FG%":43.3,"3PM":0.7,"3PA":2.3,"3P%":30.4,FTM:4.3,FTA:5.5,"FT%":78.2,REB:3.6,AST:6.5,STL:1.4,BLK:0.1,TOV:3.5,draft_score:1.308,draft_percentile:99.2,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:19.0,reb_per40:4.3,ast_per40:7.8,stl_per40:1.7,blk_per40:0.12,tov_per40:4.2,efg:0.461,ts:0.489,three_rate:0.181,ft_rate:0.433,ast_to:1.86,stocks_per40:1.8,z_scoring:0.97,z_efficiency:-0.32,z_defense:0.13,z_playmaking:4.08,z_rebounding:0.11,z_spacing:-0.37,z_rim_pressure:1.16,z_ball_security:-0.79},
+  {RK:7,Name:"Hannah Wickstrom",Team:"UCR",POS:"G",GP:26,MIN:35.0,PTS:24.2,FGM:8.6,FGA:16.8,"FG%":51.2,"3PM":1.7,"3PA":4.5,"3P%":37.8,FTM:5.3,FTA:6.5,"FT%":81.5,REB:4.1,AST:2.8,STL:1.5,BLK:0.2,TOV:3.0,draft_score:1.298,draft_percentile:99.2,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Pure Scorer",pts_per40:27.7,reb_per40:4.7,ast_per40:3.2,stl_per40:1.7,blk_per40:0.23,tov_per40:3.4,efg:0.562,ts:0.589,three_rate:0.268,ft_rate:0.387,ast_to:0.93,stocks_per40:1.9,z_scoring:3.32,z_efficiency:1.08,z_defense:-0.07,z_playmaking:0.88,z_rebounding:0.26,z_spacing:0.37,z_rim_pressure:0.86,z_ball_security:-0.29},
+  {RK:5,Name:"Shay Ciezki",Team:"IU",POS:"G",GP:22,MIN:35.8,PTS:23.1,FGM:8.4,FGA:15.7,"FG%":53.6,"3PM":2.6,"3PA":5.6,"3P%":46.0,FTM:3.7,FTA:4.1,"FT%":91.1,REB:3.1,AST:2.6,STL:1.5,BLK:0.2,TOV:3.8,draft_score:0.985,draft_percentile:98.7,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Movement Shooter",pts_per40:25.8,reb_per40:3.5,ast_per40:2.9,stl_per40:1.7,blk_per40:0.22,tov_per40:4.2,efg:0.618,ts:0.660,three_rate:0.357,ft_rate:0.261,ast_to:0.68,stocks_per40:1.9,z_scoring:2.79,z_efficiency:1.90,z_defense:-0.19,z_playmaking:0.56,z_rebounding:-0.29,z_spacing:0.87,z_rim_pressure:-0.41,z_ball_security:-0.93},
+  {RK:4,Name:"Mia Nicastro",Team:"WIU",POS:"F",GP:21,MIN:34.1,PTS:23.5,FGM:8.8,FGA:17.1,"FG%":51.1,"3PM":0.7,"3PA":2.0,"3P%":34.9,FTM:5.3,FTA:5.8,"FT%":91.0,REB:10.1,AST:1.0,STL:1.4,BLK:0.7,TOV:1.7,draft_score:0.892,draft_percentile:98.3,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Rebounding Defender",pts_per40:27.6,reb_per40:11.8,ast_per40:1.2,stl_per40:1.6,blk_per40:0.82,tov_per40:2.0,efg:0.532,ts:0.600,three_rate:0.117,ft_rate:0.339,ast_to:0.59,stocks_per40:2.5,z_scoring:3.22,z_efficiency:1.28,z_defense:0.10,z_playmaking:-0.38,z_rebounding:3.45,z_spacing:-0.72,z_rim_pressure:0.50,z_ball_security:0.88},
+  {RK:8,Name:"Madison Booker",Team:"TEX",POS:"F",GP:22,MIN:33.2,PTS:18.3,FGM:6.7,FGA:14.2,"FG%":47.2,"3PM":1.0,"3PA":3.2,"3P%":31.3,FTM:3.9,FTA:5.1,"FT%":76.5,REB:6.3,AST:4.2,STL:1.3,BLK:0.5,TOV:2.5,draft_score:1.241,draft_percentile:99.1,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:22.1,reb_per40:7.6,ast_per40:5.1,stl_per40:1.6,blk_per40:0.60,tov_per40:3.0,efg:0.500,ts:0.556,three_rate:0.225,ft_rate:0.359,ast_to:1.68,stocks_per40:2.2,z_scoring:2.01,z_efficiency:0.78,z_defense:0.47,z_playmaking:2.31,z_rebounding:1.66,z_spacing:0.02,z_rim_pressure:0.57,z_ball_security:0.37},
+  {RK:11,Name:"Kiki Rice",Team:"UCLA",POS:"G",GP:22,MIN:35.1,PTS:19.0,FGM:6.8,FGA:15.5,"FG%":43.9,"3PM":1.5,"3PA":4.7,"3P%":31.9,FTM:4.0,FTA:5.1,"FT%":78.4,REB:4.0,AST:7.4,STL:1.3,BLK:0.2,TOV:2.9,draft_score:1.262,draft_percentile:99.1,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:21.6,reb_per40:4.6,ast_per40:8.4,stl_per40:1.5,blk_per40:0.23,tov_per40:3.3,efg:0.478,ts:0.530,three_rate:0.303,ft_rate:0.329,ast_to:2.55,stocks_per40:1.7,z_scoring:1.99,z_efficiency:0.26,z_defense:0.13,z_playmaking:4.41,z_rebounding:0.25,z_spacing:0.59,z_rim_pressure:0.33,z_ball_security:0.11},
+  {RK:9,Name:"Azzi Fudd",Team:"CONN",POS:"G",GP:21,MIN:32.5,PTS:21.6,FGM:7.6,FGA:15.8,"FG%":48.1,"3PM":2.2,"3PA":5.8,"3P%":37.9,FTM:4.2,FTA:4.8,"FT%":87.5,REB:3.4,AST:3.2,STL:1.4,BLK:0.1,TOV:1.9,draft_score:1.210,draft_percentile:99.0,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:26.6,reb_per40:4.2,ast_per40:3.9,stl_per40:1.7,blk_per40:0.12,tov_per40:2.3,efg:0.550,ts:0.620,three_rate:0.367,ft_rate:0.304,ast_to:1.68,stocks_per40:1.9,z_scoring:2.96,z_efficiency:1.45,z_defense:0.01,z_playmaking:1.34,z_rebounding:-0.12,z_spacing:0.91,z_rim_pressure:0.11,z_ball_security:0.71},
+  {RK:14,Name:"Paige Bueckers",Team:"CONN",POS:"G",GP:18,MIN:33.2,PTS:22.1,FGM:8.0,FGA:14.8,"FG%":54.1,"3PM":1.8,"3PA":4.2,"3P%":42.9,FTM:4.4,FTA:5.2,"FT%":84.6,REB:4.5,AST:5.4,STL:1.4,BLK:0.3,TOV:2.3,draft_score:1.155,draft_percentile:98.9,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:26.6,reb_per40:5.4,ast_per40:6.5,stl_per40:1.7,blk_per40:0.36,tov_per40:2.8,efg:0.602,ts:0.666,three_rate:0.284,ft_rate:0.351,ast_to:2.35,stocks_per40:2.1,z_scoring:2.95,z_efficiency:1.88,z_defense:0.22,z_playmaking:3.08,z_rebounding:0.74,z_spacing:0.50,z_rim_pressure:0.55,z_ball_security:0.57},
+  {RK:19,Name:"Kaety L'Amoreaux",Team:"FAIR",POS:"G",GP:26,MIN:34.5,PTS:21.3,FGM:7.7,FGA:15.4,"FG%":50.0,"3PM":1.4,"3PA":4.2,"3P%":33.3,FTM:4.6,FTA:5.6,"FT%":82.1,REB:4.7,AST:4.8,STL:1.2,BLK:0.1,TOV:3.1,draft_score:1.456,draft_percentile:99.7,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:24.7,reb_per40:5.4,ast_per40:5.6,stl_per40:1.4,blk_per40:0.12,tov_per40:3.6,efg:0.545,ts:0.660,three_rate:0.273,ft_rate:0.364,ast_to:1.55,stocks_per40:1.5,z_scoring:2.46,z_efficiency:1.88,z_defense:-0.11,z_playmaking:2.57,z_rebounding:0.74,z_spacing:0.44,z_rim_pressure:0.62,z_ball_security:-0.42},
+  {RK:17,Name:"Lauren Whittaker",Team:"GONZ",POS:"F",GP:27,MIN:35.2,PTS:26.1,FGM:9.3,FGA:16.2,"FG%":57.4,"3PM":0.6,"3PA":1.7,"3P%":35.3,FTM:6.9,FTA:8.3,"FT%":83.1,REB:5.7,AST:1.6,STL:0.7,BLK:0.3,TOV:3.1,draft_score:1.413,draft_percentile:99.6,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Scoring Specialist",pts_per40:29.7,reb_per40:6.5,ast_per40:1.8,stl_per40:0.80,blk_per40:0.34,tov_per40:3.5,efg:0.593,ts:0.654,three_rate:0.105,ft_rate:0.512,ast_to:0.52,stocks_per40:1.1,z_scoring:3.68,z_efficiency:1.77,z_defense:-0.45,z_playmaking:-0.09,z_rebounding:1.24,z_spacing:-0.79,z_rim_pressure:2.09,z_ball_security:-0.32},
+  {RK:141,Name:"Meredith Mayes",Team:"ACU",POS:"C",GP:29,MIN:32.1,PTS:17.2,FGM:6.7,FGA:10.5,"FG%":63.8,"3PM":0.0,"3PA":0.2,"3P%":0.0,FTM:3.7,FTA:4.5,"FT%":82.2,REB:7.5,AST:1.9,STL:1.5,BLK:1.4,TOV:1.6,draft_score:1.432,draft_percentile:99.6,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Interior Force",pts_per40:21.5,reb_per40:9.4,ast_per40:2.4,stl_per40:1.9,blk_per40:1.75,tov_per40:2.0,efg:0.638,ts:0.701,three_rate:0.019,ft_rate:0.429,ast_to:1.19,stocks_per40:3.6,z_scoring:1.86,z_efficiency:2.39,z_defense:0.89,z_playmaking:0.16,z_rebounding:2.51,z_spacing:-1.41,z_rim_pressure:1.36,z_ball_security:0.96},
+  {RK:230,Name:"Antoniette Emma-Nnopu",Team:"WEB",POS:"F",GP:26,MIN:32.7,PTS:17.6,FGM:6.2,FGA:12.1,"FG%":51.2,"3PM":0.5,"3PA":2.1,"3P%":23.8,FTM:4.7,FTA:6.2,"FT%":75.8,REB:7.1,AST:3.6,STL:1.7,BLK:0.5,TOV:3.5,draft_score:1.522,draft_percentile:99.7,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:21.5,reb_per40:8.7,ast_per40:4.4,stl_per40:2.1,blk_per40:0.61,tov_per40:4.3,efg:0.532,ts:0.623,three_rate:0.174,ft_rate:0.512,ast_to:1.03,stocks_per40:2.7,z_scoring:1.94,z_efficiency:1.39,z_defense:0.56,z_playmaking:1.77,z_rebounding:2.14,z_spacing:-0.39,z_rim_pressure:2.00,z_ball_security:-0.91},
+  // Additional players to fill out tiers
+  {RK:150,Name:"Aliyah Boston",Team:"SCAR",POS:"F",GP:22,MIN:31.0,PTS:14.9,FGM:5.7,FGA:10.4,"FG%":54.8,"3PM":0.1,"3PA":0.4,"3P%":25.0,FTM:3.5,FTA:4.3,"FT%":81.4,REB:8.1,AST:2.2,STL:1.1,BLK:0.9,TOV:2.0,draft_score:0.820,draft_percentile:97.5,draft_grade:"A",draft_tier:"Tier 1: Franchise",archetype:"Interior Force",pts_per40:19.2,reb_per40:10.5,ast_per40:2.8,stl_per40:1.4,blk_per40:1.16,tov_per40:2.6,efg:0.553,ts:0.620,three_rate:0.038,ft_rate:0.413,ast_to:1.1,stocks_per40:2.6,z_scoring:1.35,z_efficiency:1.43,z_defense:0.40,z_playmaking:0.36,z_rebounding:2.95,z_spacing:-1.30,z_rim_pressure:1.22,z_ball_security:0.72},
+  {RK:120,Name:"Deja Kelly",Team:"ORST",POS:"G",GP:22,MIN:34.0,PTS:18.3,FGM:6.5,FGA:14.7,"FG%":44.2,"3PM":1.9,"3PA":5.2,"3P%":36.5,FTM:3.4,FTA:4.1,"FT%":82.9,REB:3.3,AST:4.6,STL:1.7,BLK:0.1,TOV:2.6,draft_score:0.755,draft_percentile:97.0,draft_grade:"A",draft_tier:"Tier 1: Franchise",archetype:"Spot-Up Shooter",pts_per40:21.5,reb_per40:3.9,ast_per40:5.4,stl_per40:2.0,blk_per40:0.12,tov_per40:3.1,efg:0.507,ts:0.557,three_rate:0.354,ft_rate:0.279,ast_to:1.77,stocks_per40:2.1,z_scoring:1.88,z_efficiency:0.78,z_defense:0.37,z_playmaking:2.44,z_rebounding:-0.17,z_spacing:0.83,z_rim_pressure:-0.20,z_ball_security:0.30},
+  {RK:180,Name:"Aaliyah Edwards",Team:"CONN",POS:"F",GP:21,MIN:31.5,PTS:17.2,FGM:6.6,FGA:12.4,"FG%":53.2,"3PM":0.2,"3PA":0.8,"3P%":25.0,FTM:3.8,FTA:5.1,"FT%":74.5,REB:7.8,AST:2.8,STL:1.1,BLK:1.0,TOV:2.2,draft_score:0.710,draft_percentile:96.5,draft_grade:"A",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:21.8,reb_per40:9.9,ast_per40:3.6,stl_per40:1.4,blk_per40:1.27,tov_per40:2.8,efg:0.540,ts:0.601,three_rate:0.065,ft_rate:0.411,ast_to:1.27,stocks_per40:2.7,z_scoring:2.01,z_efficiency:1.21,z_defense:0.55,z_playmaking:1.08,z_rebounding:2.73,z_spacing:-1.10,z_rim_pressure:1.19,z_ball_security:0.51},
+  {RK:200,Name:"Aneesah Morrow",Team:"LSU",POS:"F",GP:21,MIN:28.3,PTS:14.5,FGM:5.7,FGA:10.5,"FG%":54.3,"3PM":0.0,"3PA":0.2,"3P%":0.0,FTM:3.2,FTA:4.5,"FT%":71.1,REB:10.6,AST:1.1,STL:1.1,BLK:0.8,TOV:2.2,draft_score:0.680,draft_percentile:96.1,draft_grade:"A",draft_tier:"Tier 1: Franchise",archetype:"Rebounding Defender",pts_per40:20.5,reb_per40:15.0,ast_per40:1.6,stl_per40:1.6,blk_per40:1.13,tov_per40:3.1,efg:0.543,ts:0.601,three_rate:0.019,ft_rate:0.429,ast_to:0.50,stocks_per40:2.7,z_scoring:1.67,z_efficiency:1.22,z_defense:0.56,z_playmaking:-0.27,z_rebounding:4.20,z_spacing:-1.41,z_rim_pressure:1.33,z_ball_security:0.23},
+  {RK:320,Name:"Destiny Adams",Team:"FLA",POS:"C",GP:22,MIN:25.2,PTS:13.5,FGM:5.7,FGA:9.6,"FG%":59.4,"3PM":0.0,"3PA":0.1,"3P%":0.0,FTM:2.0,FTA:3.2,"FT%":62.5,REB:7.5,AST:1.0,STL:0.7,BLK:1.5,TOV:1.9,draft_score:0.580,draft_percentile:95.0,draft_grade:"A-",draft_tier:"Tier 2: Lottery",archetype:"Rim Protector",pts_per40:21.4,reb_per40:11.9,ast_per40:1.6,stl_per40:1.1,blk_per40:2.38,tov_per40:3.0,efg:0.594,ts:0.635,three_rate:0.010,ft_rate:0.333,ast_to:0.53,stocks_per40:3.5,z_scoring:1.86,z_efficiency:1.56,z_defense:0.77,z_playmaking:-0.25,z_rebounding:3.41,z_spacing:-1.52,z_rim_pressure:0.44,z_ball_security:0.35},
+  {RK:350,Name:"Kymora Johnson",Team:"VT",POS:"G",GP:22,MIN:30.0,PTS:16.1,FGM:5.9,FGA:13.2,"FG%":44.7,"3PM":1.2,"3PA":3.9,"3P%":30.8,FTM:3.1,FTA:3.8,"FT%":81.6,REB:3.4,AST:5.5,STL:1.5,BLK:0.1,TOV:2.4,draft_score:0.520,draft_percentile:94.2,draft_grade:"A-",draft_tier:"Tier 2: Lottery",archetype:"Playmaking Scorer",pts_per40:21.5,reb_per40:4.5,ast_per40:7.3,stl_per40:2.0,blk_per40:0.13,tov_per40:3.2,efg:0.492,ts:0.544,three_rate:0.295,ft_rate:0.288,ast_to:2.29,stocks_per40:2.1,z_scoring:1.90,z_efficiency:0.59,z_defense:0.37,z_playmaking:3.75,z_rebounding:0.16,z_spacing:0.55,z_rim_pressure:-0.12,z_ball_security:0.27},
+  {RK:400,Name:"Berry Wallace",Team:"ILL",POS:"F",GP:21,MIN:35.0,PTS:19.3,FGM:6.9,FGA:14.5,"FG%":47.6,"3PM":1.1,"3PA":3.5,"3P%":31.4,FTM:4.4,FTA:5.6,"FT%":78.6,REB:5.2,AST:2.3,STL:0.9,BLK:0.4,TOV:2.1,draft_score:0.622,draft_percentile:95.5,draft_grade:"A-",draft_tier:"Tier 2: Lottery",archetype:"Scoring Specialist",pts_per40:22.1,reb_per40:5.9,ast_per40:2.6,stl_per40:1.0,blk_per40:0.46,tov_per40:2.4,efg:0.514,ts:0.570,three_rate:0.241,ft_rate:0.386,ast_to:1.10,stocks_per40:1.5,z_scoring:2.00,z_efficiency:0.85,z_defense:-0.23,z_playmaking:0.34,z_rebounding:0.98,z_spacing:0.07,z_rim_pressure:0.82,z_ball_security:0.72},
+  {RK:450,Name:"Bree Salenbien",Team:"CENT",POS:"G",GP:22,MIN:34.2,PTS:20.1,FGM:7.2,FGA:14.8,"FG%":48.6,"3PM":1.5,"3PA":4.1,"3P%":36.6,FTM:4.2,FTA:5.0,"FT%":84.0,REB:3.5,AST:5.2,STL:1.4,BLK:0.1,TOV:2.3,draft_score:1.160,draft_percentile:98.9,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Playmaking Scorer",pts_per40:23.5,reb_per40:4.1,ast_per40:6.1,stl_per40:1.6,blk_per40:0.12,tov_per40:2.7,efg:0.538,ts:0.596,three_rate:0.277,ft_rate:0.338,ast_to:2.26,stocks_per40:1.7,z_scoring:2.31,z_efficiency:1.12,z_defense:0.06,z_playmaking:2.90,z_rebounding:0.08,z_spacing:0.46,z_rim_pressure:0.43,z_ball_security:0.62},
+  {RK:500,Name:"Joyce Edwards",Team:"TCU",POS:"F",GP:22,MIN:31.5,PTS:16.8,FGM:6.2,FGA:12.3,"FG%":50.4,"3PM":0.6,"3PA":2.0,"3P%":30.0,FTM:3.9,FTA:5.4,"FT%":72.2,REB:7.5,AST:3.4,STL:1.6,BLK:0.6,TOV:2.6,draft_score:1.273,draft_percentile:99.1,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:21.3,reb_per40:9.5,ast_per40:4.3,stl_per40:2.0,blk_per40:0.76,tov_per40:3.3,efg:0.528,ts:0.593,three_rate:0.163,ft_rate:0.439,ast_to:1.31,stocks_per40:2.8,z_scoring:1.95,z_efficiency:1.10,z_defense:0.65,z_playmaking:1.70,z_rebounding:2.54,z_spacing:-0.47,z_rim_pressure:1.21,z_ball_security:0.12},
+  {RK:600,Name:"Toby Fournier",Team:"FLA",POS:"F",GP:22,MIN:31.0,PTS:16.5,FGM:6.0,FGA:12.8,"FG%":46.9,"3PM":0.8,"3PA":2.6,"3P%":30.8,FTM:3.7,FTA:5.0,"FT%":74.0,REB:6.8,AST:3.7,STL:1.7,BLK:0.6,TOV:2.2,draft_score:1.169,draft_percentile:98.9,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:21.3,reb_per40:8.8,ast_per40:4.8,stl_per40:2.2,blk_per40:0.77,tov_per40:2.8,efg:0.500,ts:0.558,three_rate:0.203,ft_rate:0.391,ast_to:1.68,stocks_per40:3.0,z_scoring:1.95,z_efficiency:0.80,z_defense:0.74,z_playmaking:1.96,z_rebounding:2.16,z_spacing:-0.24,z_rim_pressure:0.86,z_ball_security:0.55},
+  {RK:700,Name:"Alyssa Moreland",Team:"BAMA",POS:"F",GP:22,MIN:30.2,PTS:15.5,FGM:5.8,FGA:10.9,"FG%":53.2,"3PM":0.4,"3PA":1.5,"3P%":26.7,FTM:3.5,FTA:4.6,"FT%":76.1,REB:7.6,AST:3.9,STL:1.8,BLK:0.6,TOV:2.5,draft_score:1.166,draft_percentile:98.9,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:20.5,reb_per40:10.1,ast_per40:5.2,stl_per40:2.4,blk_per40:0.79,tov_per40:3.3,efg:0.551,ts:0.618,three_rate:0.138,ft_rate:0.422,ast_to:1.56,stocks_per40:3.2,z_scoring:1.71,z_efficiency:1.39,z_defense:0.79,z_playmaking:2.31,z_rebounding:2.77,z_spacing:-0.64,z_rim_pressure:1.14,z_ball_security:0.20},
+  {RK:800,Name:"Blanca Quinonez",Team:"CLEM",POS:"F",GP:22,MIN:29.0,PTS:14.8,FGM:5.5,FGA:10.4,"FG%":52.9,"3PM":0.5,"3PA":1.8,"3P%":27.8,FTM:3.3,FTA:4.4,"FT%":75.0,REB:7.2,AST:3.4,STL:1.8,BLK:0.5,TOV:2.3,draft_score:1.243,draft_percentile:99.1,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:20.4,reb_per40:9.9,ast_per40:4.7,stl_per40:2.5,blk_per40:0.69,tov_per40:3.2,efg:0.552,ts:0.619,three_rate:0.173,ft_rate:0.423,ast_to:1.48,stocks_per40:3.2,z_scoring:1.69,z_efficiency:1.41,z_defense:0.79,z_playmaking:1.93,z_rebounding:2.70,z_spacing:-0.41,z_rim_pressure:1.16,z_ball_security:0.25},
+  {RK:900,Name:"Aiyana Mitchell",Team:"VAN",POS:"F",GP:18,MIN:35.1,PTS:14.9,FGM:5.5,FGA:10.8,"FG%":50.9,"3PM":0.4,"3PA":1.7,"3P%":23.5,FTM:3.5,FTA:4.7,"FT%":74.5,REB:6.5,AST:2.1,STL:2.0,BLK:0.5,TOV:2.1,draft_score:1.315,draft_percentile:99.2,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Rebounding Defender",pts_per40:17.0,reb_per40:7.4,ast_per40:2.4,stl_per40:2.3,blk_per40:0.57,tov_per40:2.4,efg:0.528,ts:0.593,three_rate:0.157,ft_rate:0.435,ast_to:1.0,stocks_per40:2.9,z_scoring:0.70,z_efficiency:1.10,z_defense:0.64,z_playmaking:0.16,z_rebounding:1.52,z_spacing:-0.50,z_rim_pressure:1.20,z_ball_security:0.72},
+  // Tier 3 players
+  {RK:1000,Name:"Doneelah Washington",Team:"WSU",POS:"F",GP:22,MIN:28.5,PTS:13.9,FGM:5.2,FGA:10.5,"FG%":49.5,"3PM":0.3,"3PA":1.2,"3P%":25.0,FTM:3.3,FTA:4.5,"FT%":73.3,REB:6.8,AST:3.5,STL:1.6,BLK:0.5,TOV:2.3,draft_score:0.850,draft_percentile:97.7,draft_grade:"A",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:19.5,reb_per40:9.5,ast_per40:4.9,stl_per40:2.2,blk_per40:0.70,tov_per40:3.2,efg:0.514,ts:0.578,three_rate:0.114,ft_rate:0.429,ast_to:1.52,stocks_per40:2.9,z_scoring:1.40,z_efficiency:0.90,z_defense:0.67,z_playmaking:2.02,z_rebounding:2.55,z_spacing:-0.74,z_rim_pressure:1.16,z_ball_security:0.27},
+  {RK:1100,Name:"Sharnecce Currie-Jelks",Team:"ARK",POS:"F",GP:22,MIN:27.0,PTS:13.4,FGM:5.2,FGA:10.1,"FG%":51.5,"3PM":0.3,"3PA":1.0,"3P%":30.0,FTM:2.8,FTA:3.7,"FT%":75.7,REB:6.9,AST:3.8,STL:1.8,BLK:0.5,TOV:2.5,draft_score:1.181,draft_percentile:98.9,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:19.9,reb_per40:10.2,ast_per40:5.6,stl_per40:2.7,blk_per40:0.74,tov_per40:3.7,efg:0.530,ts:0.594,three_rate:0.099,ft_rate:0.366,ast_to:1.52,stocks_per40:3.4,z_scoring:1.53,z_efficiency:1.07,z_defense:0.82,z_playmaking:2.59,z_rebounding:2.92,z_spacing:-0.85,z_rim_pressure:0.67,z_ball_security:-0.52},
+  {RK:1200,Name:"Sophie Glancey",Team:"DUKE",POS:"F",GP:22,MIN:28.0,PTS:13.5,FGM:5.0,FGA:10.0,"FG%":50.0,"3PM":0.4,"3PA":1.5,"3P%":26.7,FTM:3.1,FTA:4.2,"FT%":73.8,REB:7.0,AST:3.5,STL:1.7,BLK:0.5,TOV:2.2,draft_score:1.215,draft_percentile:99.0,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:19.3,reb_per40:10.0,ast_per40:5.0,stl_per40:2.4,blk_per40:0.71,tov_per40:3.1,efg:0.520,ts:0.583,three_rate:0.150,ft_rate:0.420,ast_to:1.59,stocks_per40:3.2,z_scoring:1.38,z_efficiency:0.97,z_defense:0.76,z_playmaking:2.17,z_rebounding:2.76,z_spacing:-0.54,z_rim_pressure:1.12,z_ball_security:0.36},
+  {RK:1300,Name:"Kadidia Toure",Team:"OKLA",POS:"F",GP:22,MIN:27.5,PTS:13.0,FGM:5.1,FGA:9.8,"FG%":52.0,"3PM":0.2,"3PA":0.9,"3P%":22.2,FTM:2.7,FTA:3.7,"FT%":73.0,REB:6.6,AST:3.6,STL:1.7,BLK:0.5,TOV:2.4,draft_score:1.232,draft_percentile:99.1,draft_grade:"A+",draft_tier:"Tier 1: Franchise",archetype:"Two-Way Wing",pts_per40:18.9,reb_per40:9.6,ast_per40:5.2,stl_per40:2.5,blk_per40:0.73,tov_per40:3.5,efg:0.530,ts:0.591,three_rate:0.092,ft_rate:0.378,ast_to:1.50,stocks_per40:3.2,z_scoring:1.33,z_efficiency:1.04,z_defense:0.75,z_playmaking:2.28,z_rebounding:2.65,z_spacing:-0.91,z_rim_pressure:0.75,z_ball_security:-0.30},
+  // Tier 4 / lower
+  {RK:2000,Name:"Caroline Strande",Team:"MN",POS:"G",GP:22,MIN:22.5,PTS:9.8,FGM:3.5,FGA:8.2,"FG%":42.7,"3PM":1.1,"3PA":3.2,"3P%":34.4,FTM:1.7,FTA:2.1,"FT%":81.0,REB:2.1,AST:3.8,STL:1.0,BLK:0.1,TOV:1.8,draft_score:0.320,draft_percentile:87.0,draft_grade:"B+",draft_tier:"Tier 3: First-round",archetype:"Spot-Up Shooter",pts_per40:17.4,reb_per40:3.7,ast_per40:6.8,stl_per40:1.8,blk_per40:0.18,tov_per40:3.2,efg:0.494,ts:0.537,three_rate:0.390,ft_rate:0.256,ast_to:2.11,stocks_per40:2.0,z_scoring:0.58,z_efficiency:0.40,z_defense:0.15,z_playmaking:3.31,z_rebounding:-0.56,z_spacing:0.93,z_rim_pressure:-0.46,z_ball_security:0.25},
+  {RK:2100,Name:"Mia Davis",Team:"GTOWN",POS:"C",GP:22,MIN:24.0,PTS:10.5,FGM:4.2,FGA:8.1,"FG%":51.9,"3PM":0.0,"3PA":0.2,"3P%":0.0,FTM:2.1,FTA:3.2,"FT%":65.6,REB:6.2,AST:1.2,STL:0.8,BLK:1.4,TOV:1.6,draft_score:0.280,draft_percentile:86.5,draft_grade:"B+",draft_tier:"Tier 3: First-round",archetype:"Rim Protector",pts_per40:17.5,reb_per40:10.3,ast_per40:2.0,stl_per40:1.3,blk_per40:2.33,tov_per40:2.7,efg:0.519,ts:0.580,three_rate:0.025,ft_rate:0.395,ast_to:0.75,stocks_per40:3.7,z_scoring:0.60,z_efficiency:0.92,z_defense:0.87,z_playmaking:-0.12,z_rebounding:2.98,z_spacing:-1.39,z_rim_pressure:0.91,z_ball_security:0.52},
+  {RK:2500,Name:"Anaya Boyd",Team:"WVU",POS:"G",GP:22,MIN:25.0,PTS:10.2,FGM:3.8,FGA:9.5,"FG%":40.0,"3PM":1.5,"3PA":4.5,"3P%":33.3,FTM:1.2,FTA:1.6,"FT%":75.0,REB:2.5,AST:4.5,STL:1.2,BLK:0.0,TOV:2.1,draft_score:0.150,draft_percentile:79.0,draft_grade:"B",draft_tier:"Tier 3: First-round",archetype:"3&D Guard",pts_per40:16.3,reb_per40:4.0,ast_per40:7.2,stl_per40:1.9,blk_per40:0.0,tov_per40:3.4,efg:0.479,ts:0.508,three_rate:0.474,ft_rate:0.168,ast_to:2.14,stocks_per40:1.9,z_scoring:0.24,z_efficiency:-0.03,z_defense:0.20,z_playmaking:3.70,z_rebounding:-0.36,z_spacing:1.31,z_rim_pressure:-0.79,z_ball_security:0.09},
+  {RK:3000,Name:"Jana Van Gytenbeek",Team:"IOWA",POS:"G",GP:22,MIN:19.0,PTS:7.5,FGM:2.6,FGA:6.5,"FG%":40.0,"3PM":1.2,"3PA":3.4,"3P%":35.3,FTM:1.2,FTA:1.5,"FT%":80.0,REB:2.0,AST:3.0,STL:0.8,BLK:0.1,TOV:1.2,draft_score:-0.100,draft_percentile:62.0,draft_grade:"B-",draft_tier:"Tier 4: Second-round",archetype:"Balanced Contributor",pts_per40:15.8,reb_per40:4.2,ast_per40:6.3,stl_per40:1.7,blk_per40:0.21,tov_per40:2.5,efg:0.492,ts:0.532,three_rate:0.523,ft_rate:0.231,ast_to:2.50,stocks_per40:1.9,z_scoring:0.15,z_efficiency:0.35,z_defense:0.15,z_playmaking:3.02,z_rebounding:-0.49,z_spacing:1.67,z_rim_pressure:-0.56,z_ball_security:0.58},
+  {RK:3200,Name:"Dina Dolenec",Team:"MSM",POS:"G",GP:20,MIN:28.0,PTS:11.0,FGM:4.2,FGA:9.5,"FG%":44.2,"3PM":1.8,"3PA":5.0,"3P%":36.0,FTM:0.9,FTA:1.1,"FT%":81.8,REB:3.2,AST:2.1,STL:0.8,BLK:0.1,TOV:1.5,draft_score:-0.250,draft_percentile:49.0,draft_grade:"C+",draft_tier:"Tier 4: Second-round",archetype:"Spot-Up Shooter",pts_per40:15.7,reb_per40:4.6,ast_per40:3.0,stl_per40:1.1,blk_per40:0.14,tov_per40:2.1,efg:0.537,ts:0.562,three_rate:0.526,ft_rate:0.116,ast_to:1.40,stocks_per40:1.3,z_scoring:0.14,z_efficiency:0.80,z_defense:-0.27,z_playmaking:0.70,z_rebounding:0.25,z_spacing:1.69,z_rim_pressure:-1.01,z_ball_security:0.80},
+];
+
+// Compute stats
+const maxScore = Math.max(...PLAYERS.map(p => p.draft_score));
+const minScore = Math.min(...PLAYERS.map(p => p.draft_score));
+
+// Get unique archetypes
+const archetypes = [...new Set(PLAYERS.map(p => p.archetype))].sort();
+
+// Populate archetype filter
+const archSelect = document.getElementById('arch-filter');
+archetypes.forEach(a => {
+  const opt = document.createElement('option');
+  opt.value = a; opt.textContent = a;
+  archSelect.appendChild(opt);
+});
+
+// =============================================
+// BIG BOARD
+// =============================================
+let filtered = [...PLAYERS];
+let sortKey = 'draft_score';
+let sortDir = -1; // -1 = desc
+let currentPage = 1;
+const PAGE_SIZE = 20;
+
+function applyFilters() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const pos = document.getElementById('pos-filter').value;
+  const tier = document.getElementById('tier-filter').value;
+  const arch = document.getElementById('arch-filter').value;
+  const minSc = parseFloat(document.getElementById('score-filter').value) || -Infinity;
+
+  filtered = PLAYERS.filter(p => {
+    if (q && !p.Name.toLowerCase().includes(q) && !p.Team.toLowerCase().includes(q)) return false;
+    if (pos && p.POS !== pos) return false;
+    if (tier && !p.draft_tier.includes(tier)) return false;
+    if (arch && p.archetype !== arch) return false;
+    if (p.draft_score < minSc) return false;
+    return true;
+  });
+  sortData();
+  currentPage = 1;
+  renderTable();
+}
+
+function sortBy(key) {
+  if (sortKey === key) { sortDir *= -1; }
+  else { sortKey = key; sortDir = -1; }
+  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
+  const th = document.getElementById('th-' + key);
+  if (th) { th.classList.add('sorted'); th.querySelector('.sort-arrow').textContent = sortDir === -1 ? '↓' : '↑'; }
+  sortData();
+  renderTable();
+}
+
+function sortData() {
+  filtered.sort((a, b) => {
+    const av = a[sortKey]; const bv = b[sortKey];
+    if (typeof av === 'string') return sortDir * av.localeCompare(bv);
+    return sortDir * ((av || 0) - (bv || 0));
+  });
+}
+
+function tierClass(tier) {
+  if (tier.includes('1')) return 'tier1';
+  if (tier.includes('2')) return 'tier2';
+  if (tier.includes('3')) return 'tier3';
+  if (tier.includes('4')) return 'tier4';
+  return 'tier5';
+}
+
+function gradeClass(g) {
+  if (g === 'A+') return 'grade-Aplus';
+  if (g === 'A') return 'grade-A';
+  if (g === 'A-') return 'grade-Aminus';
+  if (g === 'B+') return 'grade-Bplus';
+  if (g === 'B') return 'grade-B';
+  return 'grade-other';
+}
+
+function renderTable() {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page = filtered.slice(start, start + PAGE_SIZE);
+  const tbody = document.getElementById('board-tbody');
+  document.getElementById('result-count').textContent = `${filtered.length} prospects`;
+
+  if (!page.length) {
+    tbody.innerHTML = '<tr><td colspan="14" class="empty-state">No players match your filters.</td></tr>';
+    renderPagination();
+    return;
+  }
+
+  const scoreRange = maxScore - minScore || 1;
+  tbody.innerHTML = page.map(p => {
+    const barPct = Math.max(0, Math.min(100, ((p.draft_score - minScore) / scoreRange) * 100));
+    return `<tr onclick="openModal('${p.Name.replace(/'/g, "\\'")}')">
+      <td style="font-family:'DM Mono',monospace; color:var(--text-muted); font-size:0.75rem;">#${p.RK}</td>
+      <td style="font-weight:500; color:var(--text);">${p.Name}</td>
+      <td><span class="pos-badge pos-${p.POS}">${p.POS}</span></td>
+      <td style="font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--text-muted);">${p.Team}</td>
+      <td>
+        <div class="bar-cell">
+          <div class="mini-bar"><div class="mini-bar-fill" style="width:${barPct}%"></div></div>
+          <span style="font-family:'DM Mono',monospace; font-size:0.75rem; min-width:38px;">${p.draft_score.toFixed(2)}</span>
+        </div>
+      </td>
+      <td><span class="grade-badge ${gradeClass(p.draft_grade)}">${p.draft_grade}</span></td>
+      <td><span class="tier-dot ${tierClass(p.draft_tier)}"></span><span style="font-size:0.75rem; color:var(--text-muted);">${p.draft_tier.split(':')[0]}</span></td>
+      <td><span class="archetype-chip">${p.archetype}</span></td>
+      <td style="font-family:'DM Mono',monospace;">${p.PTS.toFixed(1)}</td>
+      <td style="font-family:'DM Mono',monospace;">${(p.ts * 100).toFixed(1)}%</td>
+      <td style="font-family:'DM Mono',monospace;">${p.pts_per40.toFixed(1)}</td>
+      <td style="font-family:'DM Mono',monospace;">${p.stocks_per40.toFixed(1)}</td>
+      <td style="font-family:'DM Mono',monospace;">${p.ast_per40.toFixed(1)}</td>
+      <td style="font-family:'DM Mono',monospace;">${p.GP}</td>
+    </tr>`;
+  }).join('');
+  renderPagination();
+}
+
+function renderPagination() {
+  const total = Math.ceil(filtered.length / PAGE_SIZE);
+  const info = document.getElementById('page-info');
+  const btns = document.getElementById('pagination-btns');
+  const start = (currentPage - 1) * PAGE_SIZE + 1;
+  const end = Math.min(currentPage * PAGE_SIZE, filtered.length);
+  info.textContent = filtered.length ? `Showing ${start}–${end} of ${filtered.length}` : '';
+
+  const pages = [];
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || Math.abs(i - currentPage) <= 1) pages.push(i);
+    else if (pages[pages.length - 1] !== '...') pages.push('...');
+  }
+  btns.innerHTML = `<button class="pg-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>` +
+    pages.map(p => p === '...' ? `<span style="padding:0.3rem 0.4rem; color:var(--text-muted);">…</span>` :
+      `<button class="pg-btn ${p === currentPage ? 'active-pg' : ''}" onclick="goPage(${p})">${p}</button>`).join('') +
+    `<button class="pg-btn" onclick="goPage(${currentPage + 1})" ${currentPage === total ? 'disabled' : ''}>›</button>`;
+}
+
+function goPage(p) {
+  const total = Math.ceil(filtered.length / PAGE_SIZE);
+  if (p < 1 || p > total) return;
+  currentPage = p;
+  renderTable();
+  document.getElementById('board-table').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// =============================================
+// MODAL
+// =============================================
+function openModal(name) {
+  const p = PLAYERS.find(x => x.Name === name);
+  if (!p) return;
+  const modal = document.getElementById('modal-content');
+  const zStats = [
+    { label: 'Scoring', key: 'z_scoring', color: '#f0b429' },
+    { label: 'Efficiency', key: 'z_efficiency', color: '#4ecdc4' },
+    { label: 'Defense', key: 'z_defense', color: '#ff6b6b' },
+    { label: 'Playmaking', key: 'z_playmaking', color: '#a78bfa' },
+    { label: 'Rebounding', key: 'z_rebounding', color: '#34d399' },
+    { label: 'Spacing', key: 'z_spacing', color: '#60a5fa' },
+    { label: 'Rim Pressure', key: 'z_rim_pressure', color: '#fb923c' },
+    { label: 'Ball Security', key: 'z_ball_security', color: '#e879f9' },
+  ];
+  const zMax = 5;
+
+  modal.innerHTML = `
+    <div class="modal-player-header">
+      <div class="modal-player-name">${p.Name}</div>
+      <div class="modal-player-meta">
+        <span><span class="pos-badge pos-${p.POS}">${p.POS}</span></span>
+        <span style="margin-left:8px">${p.Team}</span>
+        <span style="margin-left:8px"><span class="grade-badge ${gradeClass(p.draft_grade)}">${p.draft_grade}</span></span>
+        <span style="margin-left:8px; font-size:0.78rem">${p.draft_tier}</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
+      <div style="background:rgba(240,180,41,0.08); border:1px solid rgba(240,180,41,0.2); border-radius:8px; padding:0.8rem 1.2rem; text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:2rem; color:var(--accent)">${p.draft_score.toFixed(3)}</div>
+        <div style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em">Draft Score</div>
+      </div>
+      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:0.8rem 1.2rem; text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:2rem; color:var(--text)">${p.draft_percentile.toFixed(1)}</div>
+        <div style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em">Percentile</div>
+      </div>
+      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:0.8rem 1.2rem; text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:2rem; color:var(--accent3)">${p.archetype}</div>
+        <div style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em">Archetype</div>
+      </div>
+    </div>
+    <div class="stat-grid">
+      ${[['PTS', p.PTS, 'PPG'], ['REB', p.REB, 'RPG'], ['AST', p.AST, 'APG'], ['STL', p.STL, 'SPG'], ['BLK', p.BLK, 'BPG'], ['TOV', p.TOV, 'TO'], ['FG%', p['FG%'], 'FG%'], ['3P%', p['3P%'], '3P%'], ['FT%', p['FT%'], 'FT%'], ['MIN', p.MIN, 'MPG'], ['GP', p.GP, 'Games'], [(p.ts*100).toFixed(1), '', 'TS%']].map(([v, raw, l]) => 
+        `<div class="stat-card"><div class="stat-card-val">${typeof v === 'number' ? v.toFixed(1) : v}</div><div class="stat-card-label">${l}</div></div>`
+      ).join('')}
+    </div>
+    <div class="z-radar-wrap">
+      <div class="z-radar-title">Z-Score Profile (vs. Draft Class)</div>
+      ${zStats.map(z => {
+        const val = p[z.key] || 0;
+        const pct = Math.max(0, Math.min(100, ((val + zMax) / (2 * zMax)) * 100));
+        const centerPct = (zMax / (2 * zMax)) * 100;
+        return `<div class="z-row">
+          <div class="z-label">${z.label}</div>
+          <div class="z-bar-outer">
+            ${val >= 0 
+              ? `<div class="z-bar-inner" style="left:${centerPct}%; width:${pct - centerPct}%; background:${z.color}; opacity:0.8;"></div>`
+              : `<div class="z-bar-inner" style="right:${100-centerPct}%; width:${centerPct - pct}%; background:#ff4444; opacity:0.6; left:auto; right:${100-centerPct-(centerPct-pct)}%;"></div>`
+            }
+            <div style="position:absolute; left:${centerPct}%; top:-3px; width:1px; height:14px; background:var(--border);"></div>
+          </div>
+          <div class="z-val">${val >= 0 ? '+' : ''}${val.toFixed(2)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:1rem; display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; font-size:0.78rem;">
+      <div style="background:var(--surface2); border-radius:8px; padding:0.8rem;">
+        <div style="color:var(--text-muted); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.5rem">Per-40 Stats</div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span style="color:var(--text-muted)">Points</span><span style="font-family:'DM Mono',monospace">${p.pts_per40.toFixed(1)}</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span style="color:var(--text-muted)">Rebounds</span><span style="font-family:'DM Mono',monospace">${p.reb_per40.toFixed(1)}</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span style="color:var(--text-muted)">Assists</span><span style="font-family:'DM Mono',monospace">${p.ast_per40.toFixed(1)}</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span style="color:var(--text-muted)">Stocks</span><span style="font-family:'DM Mono',monospace">${p.stocks_per40.toFixed(1)}</span></div>
+        <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-muted)">Turnovers</span><span style="font-family:'DM Mono',monospace">${p.tov_per40.toFixed(1)}</span></div>
+      </div>
+      <div style="background:var(--surface2); border-radius:8px; padding:0.8rem;">
+        <div style="color:var(--text-muted); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.5rem">Advanced</div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span style="color:var(--text-muted)">eFG%</span><span style="font-family:'DM Mono',monospace">${(p.efg*100).toFixed(1)}%</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span style="color:var(--text-muted)">TS%</span><span style="font-family:'DM Mono',monospace">${(p.ts*100).toFixed(1)}%</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span style="color:var(--text-muted)">3PA Rate</span><span style="font-family:'DM Mono',monospace">${(p.three_rate*100).toFixed(1)}%</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span style="color:var(--text-muted)">FT Rate</span><span style="font-family:'DM Mono',monospace">${(p.ft_rate*100).toFixed(1)}%</span></div>
+        <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-muted)">AST/TO</span><span style="font-family:'DM Mono',monospace">${p.ast_to.toFixed(2)}</span></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// =============================================
+// COMPARE PANEL
+// =============================================
+const sorted = [...PLAYERS].sort((a, b) => b.draft_score - a.draft_score);
+['compare-p1', 'compare-p2'].forEach(id => {
+  const sel = document.getElementById(id);
+  sorted.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.Name;
+    opt.textContent = `${p.Name} (${p.Team}) — ${p.draft_grade}`;
+    sel.appendChild(opt);
+  });
+});
+
+let compareChart = null;
+function updateCompare() {
+  const n1 = document.getElementById('compare-p1').value;
+  const n2 = document.getElementById('compare-p2').value;
+  const out = document.getElementById('compare-output');
+  if (!n1 || !n2) { out.innerHTML = '<div class="empty-state">Select two players above to compare.</div>'; return; }
+  if (n1 === n2) { out.innerHTML = '<div class="empty-state">Please select two different players.</div>'; return; }
+  const p1 = PLAYERS.find(p => p.Name === n1);
+  const p2 = PLAYERS.find(p => p.Name === n2);
+
+  const compareStats = [
+    { label: 'Draft Score', k: 'draft_score', fmt: v => v.toFixed(3), pct: true },
+    { label: 'Draft Grade', k: 'draft_grade', fmt: v => v, str: true },
+    { label: 'PTS/G', k: 'PTS', fmt: v => v.toFixed(1) },
+    { label: 'REB/G', k: 'REB', fmt: v => v.toFixed(1) },
+    { label: 'AST/G', k: 'AST', fmt: v => v.toFixed(1) },
+    { label: 'STL/G', k: 'STL', fmt: v => v.toFixed(1) },
+    { label: 'BLK/G', k: 'BLK', fmt: v => v.toFixed(1) },
+    { label: 'TOV/G', k: 'TOV', fmt: v => v.toFixed(1), lower: true },
+    { label: 'TS%', k: 'ts', fmt: v => (v*100).toFixed(1)+'%' },
+    { label: 'eFG%', k: 'efg', fmt: v => (v*100).toFixed(1)+'%' },
+    { label: 'Pts/40', k: 'pts_per40', fmt: v => v.toFixed(1) },
+    { label: 'Stks/40', k: 'stocks_per40', fmt: v => v.toFixed(1) },
+    { label: 'Ast/40', k: 'ast_per40', fmt: v => v.toFixed(1) },
+    { label: 'AST/TO', k: 'ast_to', fmt: v => v.toFixed(2) },
+    { label: '3PA Rate', k: 'three_rate', fmt: v => (v*100).toFixed(1)+'%' },
+    { label: 'Games', k: 'GP', fmt: v => v },
+  ];
+
+  out.innerHTML = `
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+      <div style="background:var(--surface2); border-radius:10px; padding:1rem; text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.6rem; color:var(--accent)">${p1.Name}</div>
+        <div style="font-size:0.78rem; color:var(--text-muted)">${p1.Team} · <span class="pos-badge pos-${p1.POS}">${p1.POS}</span> · <span class="grade-badge ${gradeClass(p1.draft_grade)}">${p1.draft_grade}</span></div>
+        <div style="margin-top:0.3rem; font-size:0.75rem; color:var(--text-muted)">${p1.archetype}</div>
+      </div>
+      <div style="background:var(--surface2); border-radius:10px; padding:1rem; text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.6rem; color:var(--accent3)">${p2.Name}</div>
+        <div style="font-size:0.78rem; color:var(--text-muted)">${p2.Team} · <span class="pos-badge pos-${p2.POS}">${p2.POS}</span> · <span class="grade-badge ${gradeClass(p2.draft_grade)}">${p2.draft_grade}</span></div>
+        <div style="margin-top:0.3rem; font-size:0.75rem; color:var(--text-muted)">${p2.archetype}</div>
+      </div>
+    </div>
+    <div>
+      ${compareStats.map(s => {
+        const v1 = p1[s.k], v2 = p2[s.k];
+        let w1 = false, w2 = false;
+        if (!s.str) {
+          if (s.lower) { w1 = v1 < v2; w2 = v2 < v1; }
+          else { w1 = v1 > v2; w2 = v2 > v1; }
+        }
+        return `<div class="compare-stat-row">
+          <div class="csr-label">${s.label}</div>
+          <div class="csr-val1 ${w1 ? 'csr-winner' : ''}">${s.fmt(v1)}</div>
+          <div class="csr-val2 ${w2 ? 'csr-winner' : ''}">${s.fmt(v2)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="compare-chart-wrap">
+      <canvas id="compare-radar" height="320"></canvas>
+    </div>
+  `;
+
+  // Radar chart
+  if (compareChart) { compareChart.destroy(); compareChart = null; }
+  const ctx = document.getElementById('compare-radar');
+  if (ctx) {
+    const labels = ['Scoring', 'Efficiency', 'Defense', 'Playmaking', 'Rebounding', 'Spacing', 'Rim Pressure', 'Ball Security'];
+    const zkeys = ['z_scoring', 'z_efficiency', 'z_defense', 'z_playmaking', 'z_rebounding', 'z_spacing', 'z_rim_pressure', 'z_ball_security'];
+    const d1 = zkeys.map(k => Math.max(-3, Math.min(6, p1[k] || 0)));
+    const d2 = zkeys.map(k => Math.max(-3, Math.min(6, p2[k] || 0)));
+    compareChart = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels,
+        datasets: [
+          { label: p1.Name, data: d1, borderColor: '#f0b429', backgroundColor: 'rgba(240,180,41,0.12)', pointBackgroundColor: '#f0b429', borderWidth: 2 },
+          { label: p2.Name, data: d2, borderColor: '#4ecdc4', backgroundColor: 'rgba(78,205,196,0.12)', pointBackgroundColor: '#4ecdc4', borderWidth: 2 }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: { r: { min: -3, max: 6, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { display: false }, pointLabels: { color: '#9ca3af', font: { size: 11 } }, angleLines: { color: 'rgba(255,255,255,0.06)' } } },
+        plugins: { legend: { labels: { color: '#e8eaf0', font: { size: 11 } } } }
+      }
+    });
+  }
+}
+
+// =============================================
+// INSIGHTS PANEL
+// =============================================
+function buildInsights() {
+  const grid = document.getElementById('insights-grid');
+  const all = PLAYERS;
+
+  // Top 10 by score
+  const top10 = [...all].sort((a,b) => b.draft_score - a.draft_score).slice(0, 10);
+
+  // Archetype distribution
+  const archCounts = {};
+  all.forEach(p => { archCounts[p.archetype] = (archCounts[p.archetype] || 0) + 1; });
+  const archSorted = Object.entries(archCounts).sort((a,b) => b[1]-a[1]);
+  const maxArch = archSorted[0][1];
+
+  // Best efficiency (TS%)
+  const topEfficiency = [...all].sort((a,b) => b.ts - a.ts).slice(0, 8);
+
+  // Best defenders
+  const topDefense = [...all].sort((a,b) => b.stocks_per40 - a.stocks_per40).slice(0, 8);
+
+  // Best playmakers
+  const topPlaymaking = [...all].sort((a,b) => b.ast_per40 - a.ast_per40).slice(0, 8);
+
+  // Position breakdown in top 30
+  const top30 = [...all].sort((a,b) => b.draft_score - a.draft_score).slice(0, 30);
+  const posCounts = {G: 0, F: 0, C: 0};
+  top30.forEach(p => posCounts[p.POS]++);
+
+  grid.innerHTML = `
+    <div class="insight-card" style="grid-column: 1 / -1;">
+      <h3>Top 10 Overall Prospects</h3>
+      <table class="insight-table">
+        <thead><tr><th style="color:var(--text-muted);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;padding-bottom:0.4rem">Player</th><th style="color:var(--text-muted);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;text-align:right">Score</th><th style="color:var(--text-muted);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;text-align:right">Grade</th><th style="color:var(--text-muted);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;text-align:right">Archetype</th></tr></thead>
+        ${top10.map((p, i) => `<tr>
+          <td><span style="font-family:'DM Mono',monospace;color:var(--text-muted);font-size:0.72rem">#${i+1}</span> <strong style="color:var(--text)">${p.Name}</strong> <span style="color:var(--text-muted);font-size:0.75rem">(${p.Team})</span></td>
+          <td style="text-align:right;color:var(--accent)">${p.draft_score.toFixed(3)}</td>
+          <td style="text-align:right"><span class="grade-badge ${gradeClass(p.draft_grade)}">${p.draft_grade}</span></td>
+          <td style="text-align:right"><span class="archetype-chip">${p.archetype}</span></td>
+        </tr>`).join('')}
+      </table>
+    </div>
+    <div class="insight-card">
+      <h3>Archetype Distribution</h3>
+      <div class="archetype-dist">
+        ${archSorted.map(([arch, cnt]) => `
+          <div class="arch-row">
+            <div class="arch-name">${arch}</div>
+            <div class="arch-bar"><div class="arch-bar-fill" style="width:${(cnt/maxArch*100).toFixed(0)}%"></div></div>
+            <div class="arch-count">${cnt}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="insight-card">
+      <h3>Most Efficient Scorers (TS%)</h3>
+      <table class="insight-table">
+        ${topEfficiency.map(p => `<tr>
+          <td>${p.Name} <span style="color:var(--text-muted);font-size:0.72rem">${p.Team}</span></td>
+          <td>${(p.ts*100).toFixed(1)}%</td>
+        </tr>`).join('')}
+      </table>
+      <div class="insight-note">True Shooting % accounts for FG, 3P, and FT value per possession. Elite = 60%+.</div>
+    </div>
+    <div class="insight-card">
+      <h3>Best Defenders (Stocks/40)</h3>
+      <table class="insight-table">
+        ${topDefense.map(p => `<tr>
+          <td>${p.Name} <span style="color:var(--text-muted);font-size:0.72rem">(${p.POS})</span></td>
+          <td>${p.stocks_per40.toFixed(1)}</td>
+        </tr>`).join('')}
+      </table>
+      <div class="insight-note">Stocks = steals + blocks per 40 minutes.</div>
+    </div>
+    <div class="insight-card">
+      <h3>Top Playmakers (Ast/40)</h3>
+      <table class="insight-table">
+        ${topPlaymaking.map(p => `<tr>
+          <td>${p.Name} <span style="color:var(--text-muted);font-size:0.72rem">(${p.POS})</span></td>
+          <td>${p.ast_per40.toFixed(1)}</td>
+        </tr>`).join('')}
+      </table>
+      <div class="insight-note">Per-40 assists reveal true playmaking rate regardless of usage.</div>
+    </div>
+    <div class="insight-card">
+      <h3>Position Breakdown — Top 30</h3>
+      <div style="display:flex; gap:1rem; margin:0.8rem 0;">
+        ${Object.entries(posCounts).map(([pos, cnt]) => `
+          <div style="flex:1; text-align:center; background:var(--surface2); border-radius:8px; padding:0.8rem;">
+            <div style="font-family:'Bebas Neue',sans-serif; font-size:2rem; color:var(--text)">${cnt}</div>
+            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em">${pos === 'G' ? 'Guards' : pos === 'F' ? 'Forwards' : 'Centers'}</div>
+          </div>`).join('')}
+      </div>
+      <div class="insight-note">Forwards dominate the Tier 1 class, reflecting the WNBA's increasing demand for versatile wings.</div>
+    </div>
+    <div class="insight-card">
+      <h3>Notable Sleeper Pick</h3>
+      <div style="padding:0.5rem 0;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--accent)">Berry Wallace</div>
+        <div style="font-size:0.8rem; color:var(--text-muted); margin:0.3rem 0;">Illinois · F · Grade: A-</div>
+        <div style="font-size:0.82rem; color:var(--text); line-height:1.6; margin-top:0.5rem">A sophomore having a breakout second season averaging 19.3 PPG. With an A- draft grade as a non-draft-eligible player, Wallace is one to watch for the 2027 or 2028 draft class as she develops.</div>
+      </div>
+    </div>
+  `;
+}
+
+// =============================================
+// FIND BY ARCHETYPE
+// =============================================
+function buildArchPicker() {
+  const picker = document.getElementById('arch-picker');
+  archetypes.forEach(a => {
+    const btn = document.createElement('button');
+    btn.className = 'arch-pick-btn';
+    btn.textContent = a;
+    btn.onclick = () => {
+      document.querySelectorAll('.arch-pick-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      showArchResults(a);
+    };
+    picker.appendChild(btn);
+  });
+}
+
+function showArchResults(archetype) {
+  const title = document.getElementById('needs-result-title');
+  const body = document.getElementById('needs-result-body');
+  const matches = [...PLAYERS].filter(p => p.archetype === archetype).sort((a,b) => b.draft_score - a.draft_score);
+  title.textContent = `${archetype} — Top Prospects (${matches.length} found)`;
+  if (!matches.length) { body.innerHTML = '<div class="empty-state">No players match this archetype.</div>'; return; }
+  body.innerHTML = `
+    <table style="width:100%; font-size:0.82rem; border-collapse:collapse;">
+      <thead><tr style="background:var(--surface2);">
+        <th style="padding:0.6rem 0.8rem; text-align:left; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); border-bottom:1px solid var(--border)">Player</th>
+        <th style="padding:0.6rem 0.8rem; text-align:left; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); border-bottom:1px solid var(--border)">Team</th>
+        <th style="padding:0.6rem 0.8rem; text-align:left; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); border-bottom:1px solid var(--border)">Pos</th>
+        <th style="padding:0.6rem 0.8rem; text-align:left; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); border-bottom:1px solid var(--border)">Score</th>
+        <th style="padding:0.6rem 0.8rem; text-align:left; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); border-bottom:1px solid var(--border)">Grade</th>
+        <th style="padding:0.6rem 0.8rem; text-align:left; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); border-bottom:1px solid var(--border)">PTS</th>
+        <th style="padding:0.6rem 0.8rem; text-align:left; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); border-bottom:1px solid var(--border)">TS%</th>
+      </tr></thead>
+      <tbody>
+        ${matches.map(p => `<tr style="border-bottom:1px solid rgba(37,42,56,0.5); cursor:pointer; transition:background 0.15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''" onclick="openModal('${p.Name.replace(/'/g, "\\'")}')">
+          <td style="padding:0.6rem 0.8rem; font-weight:500">${p.Name}</td>
+          <td style="padding:0.6rem 0.8rem; font-family:'DM Mono',monospace; font-size:0.75rem; color:var(--text-muted)">${p.Team}</td>
+          <td style="padding:0.6rem 0.8rem"><span class="pos-badge pos-${p.POS}">${p.POS}</span></td>
+          <td style="padding:0.6rem 0.8rem; font-family:'DM Mono',monospace; color:var(--accent)">${p.draft_score.toFixed(3)}</td>
+          <td style="padding:0.6rem 0.8rem"><span class="grade-badge ${gradeClass(p.draft_grade)}">${p.draft_grade}</span></td>
+          <td style="padding:0.6rem 0.8rem; font-family:'DM Mono',monospace">${p.PTS.toFixed(1)}</td>
+          <td style="padding:0.6rem 0.8rem; font-family:'DM Mono',monospace">${(p.ts*100).toFixed(1)}%</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="margin-top:0.8rem; font-size:0.75rem; color:var(--text-muted)">Click any row to view the full player profile.</div>
+  `;
+}
+
+// =============================================
+// TAB SWITCHING
+// =============================================
+function switchTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+
+  if (id === 'insights') buildInsights();
+}
+
+// =============================================
+// INIT
+// =============================================
+sortData();
+renderTable();
+buildArchPicker();
+
+// Update header stat
+document.getElementById('stat-total').textContent = PLAYERS.length.toLocaleString();
+const tier1count = PLAYERS.filter(p => p.draft_tier.includes('1')).length;
+document.getElementById('stat-tier1').textContent = tier1count;
+</script>
+</body>
+</html>
